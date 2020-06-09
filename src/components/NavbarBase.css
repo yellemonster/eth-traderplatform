@@ -1,0 +1,26 @@
+.NavbarBase {
+  box-shadow: var(--shadow-sm);
+  background-color: var(--gray-2);
+
+  /* display: flex; */
+  justify-content: space-between;
+}
+
+.Navbar-title {
+  font-size: 1.5rem;
+  font-weight: bolder;
+  margin: 0 0.4rem;
+  text-decoration: none;
+  color: black;
+}
+
+.Navbar-navlink {
+  margin: 0 0.1rem;
+  text-transform: uppercase;
+  font-weight: bolder;
+}
+
+.Navbar-navlink:hover,
+.Navbar-title:hover {
+  color: var(--gray-darkest);
+}
