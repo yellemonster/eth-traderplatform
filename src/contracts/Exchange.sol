@@ -3,7 +3,6 @@ pragma solidity ^0.5.0;
 import "./Token.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-
 contract Exchange {
     using SafeMath for uint256;
 
@@ -20,6 +19,12 @@ contract Exchange {
 
     // EVENTS
     event Deposit(address token, address user, uint256 amount, uint256 balance);
+    event Withdrawal(
+        address token,
+        address user,
+        uint256 amount,
+        uint256 balance
+    );
 
     // FUNCTIONS
     constructor(address _feeAccount, uint256 _feePercent) public {
@@ -36,10 +41,18 @@ contract Exchange {
         emit Deposit(ETHER, msg.sender, msg.value, tokens[ETHER][msg.sender]);
     }
 
-    function depositToken(address _token, uint256 _amount) public {
-        // TODO: Dont allow Ether deposits
-        require(_token != ETHER, "No Ether deposits allowed via this function");
+    function withdrawalEther(uint256 _amount) public {
+        require(
+            tokens[ETHER][msg.sender] >= _amount,
+            "Requested amount exceeds current balance"
+        );
+        tokens[ETHER][msg.sender] = tokens[ETHER][msg.sender].sub(_amount);
+        msg.sender.transfer(_amount);
+        emit Withdrawal(ETHER, msg.sender, _amount, tokens[ETHER][msg.sender]);
+    }
 
+    function depositToken(address _token, uint256 _amount) public {
+        require(_token != ETHER, "No Ether deposits allowed via this function");
         require(
             Token(_token).transferFrom(msg.sender, address(this), _amount),
             "Token deposit failed"
@@ -47,5 +60,35 @@ contract Exchange {
 
         tokens[_token][msg.sender] = tokens[_token][msg.sender].add(_amount);
         emit Deposit(_token, msg.sender, _amount, tokens[_token][msg.sender]);
+    }
+
+    function withdrawalToken(address _token, uint256 _amount) public {
+        require(_token != ETHER, "Invalid token address");
+
+        require(
+            tokens[_token][msg.sender] >= _amount,
+            "Withdrawal amount exceeds user balance"
+        );
+
+        require(
+            Token(_token).transfer(msg.sender, _amount),
+            "Token transfer to user failed"
+        );
+
+        tokens[_token][msg.sender] = tokens[_token][msg.sender].sub(_amount);
+        emit Withdrawal(
+            _token,
+            msg.sender,
+            _amount,
+            tokens[_token][msg.sender]
+        );
+    }
+
+    function balanceOf(address _token, address _user)
+        public
+        view
+        returns (uint256)
+    {
+        return tokens[_token][_user];
     }
 }
