@@ -6,21 +6,23 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract Token {
     using SafeMath for uint256;
 
-    string public name;
-    string public symbol;
-    uint256 public decimals;
+    string public name = "Pvblic Token";
+    string public symbol = "PVB";
+    uint256 public decimals = 18;
     uint256 public totalSupply;
 
     // Track balances
     mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
 
     event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 
     constructor() public {
-        name = "Pvblic Token";
-        symbol = "PVB";
-        decimals = 18;
-
         totalSupply = 1000000 * (10**decimals);
         balanceOf[msg.sender] = totalSupply;
     }
@@ -29,13 +31,44 @@ contract Token {
         public
         returns (bool success)
     {
-        require(_to != address(0), "Address not available");
-        require(balanceOf[msg.sender] >= _value, "Value exceeds balance");
+        require(balanceOf[msg.sender] >= _value, "Insufficient balance");
+        _transfer(msg.sender, _to, _value);
+        return true;
+    }
 
-        balanceOf[msg.sender] = balanceOf[msg.sender].sub(_value);
+    function _transfer(
+        address _from,
+        address _to,
+        uint256 _value
+    ) internal {
+        require(_to != address(0), "Invalid address");
+        balanceOf[_from] = balanceOf[_from].sub(_value);
         balanceOf[_to] = balanceOf[_to].add(_value);
+        emit Transfer(_from, _to, _value);
+    }
 
-        emit Transfer(msg.sender, _to, _value);
+    function approve(address _spender, uint256 _value)
+        public
+        returns (bool success)
+    {
+        require(_spender != address(0), "Invalid address");
+        allowance[msg.sender][_spender] = _value;
+        emit Approval(msg.sender, _spender, _value);
+        return true;
+    }
+
+    function transferFrom(
+        address _from,
+        address _to,
+        uint256 _value
+    ) public returns (bool success) {
+        require(_value <= balanceOf[_from], "Value exceeds balance");
+        require(
+            _value <= allowance[_from][msg.sender],
+            "Value exceeds allowance"
+        );
+        allowance[_from][msg.sender] = allowance[_from][msg.sender].sub(_value);
+        _transfer(_from, _to, _value);
         return true;
     }
 }
