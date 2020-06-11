@@ -3,9 +3,6 @@ import { EthContext } from "../_contexts/EthContext";
 
 import "./NavbarBase.css";
 
-import Nav from "react-bootstrap/Nav";
-import Navbar from "react-bootstrap/Navbar";
-
 export class NavbarBase extends Component {
   static contextType = EthContext;
 
@@ -13,7 +10,7 @@ export class NavbarBase extends Component {
     return (
       <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
         <a className="navbar-brand" href="#/">
-          DApp Token Exchange
+          Pvblic Token Exchange
         </a>
         <button
           className="navbar-toggler"
