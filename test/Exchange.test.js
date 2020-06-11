@@ -15,7 +15,7 @@ contract("Exchange", ([deployer, feeAccount, user1, user2]) => {
     token = await Token.new();
 
     // Transfer some tokens to user1
-    token.transfer(user1, tokens(100), { from: deployer });
+    await token.transfer(user1, tokens(100), { from: deployer });
 
     // Deploy exchange
     exchange = await Exchange.new(feeAccount, feePercent);
@@ -225,11 +225,11 @@ contract("Exchange", ([deployer, feeAccount, user1, user2]) => {
     });
   });
 
-  describe("placing orders", async () => {
+  describe("making orders", async () => {
     let result;
 
     beforeEach(async () => {
-      result = await exchange.placeOrder(
+      result = await exchange.makeOrder(
         token.address,
         tokens(1),
         ETHER_ADDRESS,
@@ -239,8 +239,8 @@ contract("Exchange", ([deployer, feeAccount, user1, user2]) => {
     });
 
     it("tracks the newly created order", async () => {
-      const orderIndex = await exchange.orderCount();
-      orderIndex.toString().should.equal("1");
+      const orderCount = await exchange.orderCount();
+      orderCount.toString().should.equal("1");
       const order = await exchange.orders("1");
       order.id.toString().should.equal("1", "id is correct");
       order.user.should.equal(user1, "user is correct");
@@ -287,7 +287,7 @@ contract("Exchange", ([deployer, feeAccount, user1, user2]) => {
       await token.approve(exchange.address, tokens(2), { from: user2 });
       await exchange.depositToken(token.address, tokens(2), { from: user2 });
       // user1 makes an order to buy tokens with Ether
-      await exchange.placeOrder(
+      await exchange.makeOrder(
         token.address,
         tokens(1),
         ETHER_ADDRESS,
