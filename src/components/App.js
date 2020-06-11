@@ -1,9 +1,9 @@
 import React from "react";
 
-import NavbarBase from "./components/NavBarBase";
-import BodyContent from "./components/BodyContent";
+import NavbarBase from "./NavBarBase";
+import BodyContent from "./BodyContent";
 
-import EthContextProvider from "./_contexts/EthContext";
+import EthContextProvider from "../_contexts/EthContext";
 
 function App() {
   return (

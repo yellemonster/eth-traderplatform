@@ -1,10 +1,11 @@
 import React, { Component } from "react";
 import { EthContext } from "../_contexts/EthContext";
 
-// import EthSwap from "../abis/EthSwap.json";
+// CONTRACTS
+import Exchange from "../abis/Exchange.json";
+import Token from "../abis/Token.json";
 
-import Main from "./Main";
-
+// STYLES
 import "./BodyContent.css";
 
 export class BodyContent extends Component {
@@ -25,38 +26,107 @@ export class BodyContent extends Component {
   }
 
   LOAD_ContractData = async () => {
-    // const _contract = await this.context.loadContract(EthSwap);
-
-    const { userAddress } = this.context;
+    const exchangeContract = await this.context.loadContract(Exchange);
+    const tokenContract = await this.context.loadContract(Token);
 
     this.setState({
       loading: false,
-      account: userAddress,
+      account: this.context.userAddress,
 
-      // contract: _contract,
+      exchangeContract,
+      tokenContract,
     });
   };
 
   render() {
-    let content;
-    if (this.state.loading) {
-      content = (
-        <p id="loader" className="text-center">
-          Loading...
-        </p>
-      );
-    } else {
-      content = <Main />;
-    }
-
     return (
       <div className="container">
         {this.state.loading ? (
           <div>Loading...</div>
         ) : (
           <div>
-            <br />
-            {content}
+            <div className="content">
+              <div className="vertical-split">
+                <div className="card bg-dark text-white">
+                  <div className="card-header">Card Title</div>
+                  <div className="card-body">
+                    <p className="card-text">
+                      Some quick example text to build on the card title and
+                      make up the bulk of the card's content.
+                    </p>
+                    <a href="/#" className="card-link">
+                      Card link
+                    </a>
+                  </div>
+                </div>
+                <div className="card bg-dark text-white">
+                  <div className="card-header">Card Title</div>
+                  <div className="card-body">
+                    <p className="card-text">
+                      Some quick example text to build on the card title and
+                      make up the bulk of the card's content.
+                    </p>
+                    <a href="/#" className="card-link">
+                      Card link
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div className="vertical">
+                <div className="card bg-dark text-white">
+                  <div className="card-header">Card Title</div>
+                  <div className="card-body">
+                    <p className="card-text">
+                      Some quick example text to build on the card title and
+                      make up the bulk of the card's content.
+                    </p>
+                    <a href="/#" className="card-link">
+                      Card link
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div className="vertical-split">
+                <div className="card bg-dark text-white">
+                  <div className="card-header">Card Title</div>
+                  <div className="card-body">
+                    <p className="card-text">
+                      Some quick example text to build on the card title and
+                      make up the bulk of the card's content.
+                    </p>
+                    <a href="/#" className="card-link">
+                      Card link
+                    </a>
+                  </div>
+                </div>
+                <div className="card bg-dark text-white">
+                  <div className="card-header">Card Title</div>
+                  <div className="card-body">
+                    <p className="card-text">
+                      Some quick example text to build on the card title and
+                      make up the bulk of the card's content.
+                    </p>
+                    <a href="/#" className="card-link">
+                      Card link
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div className="vertical">
+                <div className="card bg-dark text-white">
+                  <div className="card-header">Card Title</div>
+                  <div className="card-body">
+                    <p className="card-text">
+                      Some quick example text to build on the card title and
+                      make up the bulk of the card's content.
+                    </p>
+                    <a href="/#" className="card-link">
+                      Card link
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

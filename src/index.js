@@ -1,13 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import App from "./App";
+import App from "./components/App";
 
-import "bootstrap/dist/css/bootstrap.min.css";
-import "./index.css";
+import "bootstrap/dist/css/bootstrap.css";
+import EthContextProvider from "./_contexts/EthContext";
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById("root")
-);
+ReactDOM.render(<App />, document.getElementById("root"));
