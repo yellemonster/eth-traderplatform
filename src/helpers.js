@@ -1,4 +1,5 @@
 import moment from "moment";
+import { groupBy, maxBy, minBy, get } from "lodash";
 
 export const ETHER_ADDRESS = "0x0000000000000000000000000000000000000000";
 export const DECIMALS = 10 ** 18;
@@ -138,5 +139,46 @@ const decorateMyOpenOrder_single = (order, account) => {
     ...order,
     orderType,
     orderTypeClass: orderType === "buy" ? "success" : "danger",
+  };
+};
+
+const buildGraphData = (orders) => {
+  orders = groupBy(orders, (o) =>
+    moment.unix(o.timestamp).startOf("hour").format()
+  );
+
+  const hours = Object.keys(orders);
+  const graphData = hours.map((hour) => {
+    const group = orders[hour];
+
+    const open = group[0];
+    const high = maxBy(group, "tokenPrice");
+    const low = minBy(group, "tokenPrice");
+    const close = group[group.length - 1];
+
+    return {
+      x: new Date(hour),
+      y: [open.tokenPrice, high.tokenPrice, low.tokenPrice, close.tokenPrice],
+    };
+  });
+  return graphData;
+};
+
+export const getChartData = (orders) => {
+  let secondLastOrder;
+  let lastOrder;
+  [secondLastOrder, lastOrder] = orders.slice(orders.length - 2, orders.length);
+
+  const lastPrice = get(lastOrder, "tokenPrice");
+  const secondLastPrice = get(secondLastOrder, "tokenPrice", 0);
+
+  return {
+    lastPrice,
+    lastPriceChange: lastPrice >= secondLastPrice ? "+" : "-",
+    series: [
+      {
+        data: buildGraphData(orders),
+      },
+    ],
   };
 };

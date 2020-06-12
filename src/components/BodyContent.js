@@ -13,6 +13,7 @@ import "./BodyContent.css";
 import Trades from "./Trades";
 import OrderBook from "./OrderBook";
 import MyTransactions from "./MyTransactions";
+import PriceChart from "./PriceChart";
 
 export class BodyContent extends Component {
   static contextType = EthContext;
@@ -131,15 +132,7 @@ export class BodyContent extends Component {
               </div>
               <OrderBook orderBook={openOrders} />
               <div className="vertical-split">
-                <div className="card bg-dark text-white">
-                  <div className="card-header">Card Title</div>
-                  <div className="card-body">
-                    <p className="card-text">Upper card</p>
-                    <a href="/#" className="card-link">
-                      Card link
-                    </a>
-                  </div>
-                </div>
+                <PriceChart filledOrders={tradeStream} />
                 <MyTransactions
                   myAccount={account}
                   ordersFilled={tradeStream}
