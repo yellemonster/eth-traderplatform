@@ -29,7 +29,7 @@ const tokenPriceClass = (thisPrice, lastOrderIndex, lastPrice) => {
   return className;
 };
 
-export const decorate_openOrder = (order) => {
+export const decorateOrder = (order) => {
   let etherAmount;
   let tokenAmount;
 
@@ -95,5 +95,48 @@ export const decorate_filledOrder = (allOrders, order, lastOrderIndex) => {
       lastOrderIndex,
       last_etherAmount
     ),
+  };
+};
+
+export const decorateMyFilledOrders = (orders, account) => {
+  return orders.map((order) => {
+    order = decorateOrder(order);
+    order = decorateMyFilledOrder_single(order, account);
+    return order;
+  });
+};
+
+export const decorateMyOpenOrders = (orders, account) => {
+  return orders.map((order) => {
+    order = decorateOrder(order);
+    order = decorateMyOpenOrder_single(order, account);
+    return order;
+  });
+};
+
+const decorateMyFilledOrder_single = (order, account) => {
+  const myOrder = order.user === account;
+  let orderType;
+  if (myOrder) {
+    orderType = order.tokenGive === ETHER_ADDRESS ? "buy" : "sell";
+  } else {
+    orderType = order.tokenGive === ETHER_ADDRESS ? "sell" : "buy";
+  }
+
+  return {
+    ...order,
+    orderType,
+    orderTypeClass: orderType === "buy" ? "success" : "danger",
+    orderSign: orderType === "buy" ? "+" : "-",
+  };
+};
+
+const decorateMyOpenOrder_single = (order, account) => {
+  let orderType = order.tokenGive === ETHER_ADDRESS ? "buy" : "sell";
+
+  return {
+    ...order,
+    orderType,
+    orderTypeClass: orderType === "buy" ? "success" : "danger",
   };
 };

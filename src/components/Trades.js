@@ -1,6 +1,6 @@
 import React from "react";
 import { decorate_filledOrder } from "../helpers";
-import Spinner from "./Spinner";
+// import Spinner from "./Spinner";
 
 export default function Trades(props) {
   const allTrades = props.trades;

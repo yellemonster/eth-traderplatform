@@ -1,7 +1,9 @@
 import React from "react";
 import { groupBy, get } from "lodash";
-import { ETHER_ADDRESS, decorate_openOrder } from "../helpers";
-import Spinner from "./Spinner";
+
+import { ETHER_ADDRESS, decorateOrder } from "../helpers";
+
+// import Spinner from "./Spinner";
 
 export default function OrderBook(props) {
   const processOrderBook = () => {
@@ -51,7 +53,6 @@ export default function OrderBook(props) {
   };
 
   const showOrderBook = (orderBook) => {
-    console.log(orderBook);
     return (
       <tbody>
         {orderBook.sellOrders.map((order) => renderOrder(order))}
@@ -66,7 +67,7 @@ export default function OrderBook(props) {
   };
 
   const renderOrder = (order) => {
-    order = decorate_openOrder(order);
+    order = decorateOrder(order);
     return (
       <tr key={order.id}>
         <td>{order.tokenAmount}</td>
