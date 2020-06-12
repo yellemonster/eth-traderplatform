@@ -1,63 +1,9 @@
 import React from "react";
-import moment from "moment";
-import { ETHER_ADDRESS, tokens, ether } from "../helpers";
+import { decorate_filledOrder } from "../helpers";
+import Spinner from "./Spinner";
 
 export default function Trades(props) {
-  const decorateOrder = (order, previousOrderIndex) => {
-    let etherAmount;
-    let tokenAmount;
-
-    if (order.tokenGive === ETHER_ADDRESS) {
-      etherAmount = order.amountGive;
-      tokenAmount = order.amountGet;
-    } else {
-      etherAmount = order.amountGet;
-      tokenAmount = order.amountGive;
-    }
-
-    let tokenPrice = etherAmount / tokenAmount;
-    const precision = 100000;
-    tokenPrice = Math.round(tokenPrice * precision) / precision;
-
-    let previousOrder;
-    if (previousOrderIndex < 0) {
-      previousOrder = props.trades[0];
-    } else {
-      previousOrder = props.trades[previousOrderIndex];
-    }
-
-    let last_etherAmount;
-    if (previousOrder.tokenGive === ETHER_ADDRESS) {
-      last_etherAmount = previousOrder.amountGive;
-    } else {
-      last_etherAmount = previousOrder.amountGet;
-    }
-
-    return {
-      ...order,
-      etherAmount: ether(etherAmount),
-      tokenAmount: tokens(tokenAmount),
-      tokenPrice,
-      formattedTimestamp: moment.unix(order.timestamp).format("h:mm:ss a M/D"),
-      tokenPriceClass: tokenPriceClass(etherAmount, order.id, last_etherAmount),
-    };
-  };
-
-  const tokenPriceClass = (thisPrice, orderId, lastPrice) => {
-    let className;
-
-    if (lastPrice < thisPrice) {
-      className = "success";
-    } else if (lastPrice > thisPrice) {
-      className = "danger";
-    } else {
-      className = "warning";
-    }
-
-    console.log("Last price: ", lastPrice);
-    console.log("This price: ", thisPrice);
-    return className;
-  };
+  const allTrades = props.trades;
 
   const showFilledOrders = (orders) => {
     orders = orders.sort((a, b) => b.timestamp - a.timestamp);
@@ -89,7 +35,7 @@ export default function Trades(props) {
               </tr>
             </thead>
             {showFilledOrders(
-              props.trades.map((o, i) => decorateOrder(o, i - 1))
+              allTrades.map((o, i) => decorate_filledOrder(allTrades, o, i - 1))
             )}
           </table>
         </div>

@@ -1,5 +1,8 @@
 import React, { Component } from "react";
 import { EthContext } from "../_contexts/EthContext";
+import { reject } from "lodash";
+
+import { ETHER_ADDRESS } from "../helpers";
 
 // CONTRACTS
 import Exchange from "../abis/Exchange.json";
@@ -7,7 +10,10 @@ import Token from "../abis/Token.json";
 
 // STYLES
 import "./BodyContent.css";
+
+// COMPONENTS
 import Trades from "./Trades";
+import OrderBook from "./OrderBook";
 
 export class BodyContent extends Component {
   static contextType = EthContext;
@@ -18,7 +24,7 @@ export class BodyContent extends Component {
     this.state = {
       loading: true,
       account: "",
-      allStreamsLoaded: false,
+      orderBookLoadComplete: false,
     };
   }
 
@@ -38,24 +44,10 @@ export class BodyContent extends Component {
     const tokenContract = await this.context.loadContract(Token);
 
     this.setState({
-      loading: false,
-      account: this.context.userAddress,
-
       exchangeContract,
       tokenContract,
-    });
-  };
 
-  LOAD_allOrders = async () => {
-    const cancelledOrders = await this.GET_eventSet("Cancel");
-    const tradeStream = await this.GET_eventSet("Trade");
-    const orderStream = await this.GET_eventSet("Order");
-
-    this.setState({
-      cancelledOrders,
-      tradeStream,
-      orderStream,
-      allStreamsLoaded: true,
+      account: this.context.userAddress,
     });
   };
 
@@ -70,12 +62,49 @@ export class BodyContent extends Component {
     return eventStream.map((event) => event.returnValues);
   };
 
+  LOAD_allOrders = async () => {
+    const cancelledOrders = await this.GET_eventSet("Cancel");
+    const tradeStream = await this.GET_eventSet("Trade");
+    const orderStream = await this.GET_eventSet("Order");
+
+    const openOrders = this.LOAD_openOrders(
+      orderStream,
+      tradeStream,
+      cancelledOrders
+    );
+
+    this.setState({
+      cancelledOrders,
+      tradeStream,
+      orderStream,
+      openOrders,
+
+      orderBookLoadComplete: true,
+    });
+  };
+
+  // ORDER BOOK FUNCTIONS
+  LOAD_openOrders = (all, filled, cancelled) => {
+    const _openOrders = reject(all, (order) => {
+      const orderFilled = filled.some((o) => o.id === order.id);
+      const orderCancelled = cancelled.some((o) => o.id === order.id);
+      return orderFilled || orderCancelled;
+    });
+
+    return _openOrders;
+  };
+
   render() {
-    const { loading, allStreamsLoaded } = this.state;
+    const {
+      loading,
+      openOrders,
+      tradeStream,
+      orderBookLoadComplete,
+    } = this.state;
 
     return (
       <div className="container">
-        {loading ? (
+        {loading === true ? (
           <div>Loading...</div>
         ) : (
           <div>
@@ -106,20 +135,7 @@ export class BodyContent extends Component {
                   </div>
                 </div>
               </div>
-              <div className="vertical">
-                <div className="card bg-dark text-white">
-                  <div className="card-header">Card Title</div>
-                  <div className="card-body">
-                    <p className="card-text">
-                      Some quick example text to build on the card title and
-                      make up the bulk of the card's content.
-                    </p>
-                    <a href="/#" className="card-link">
-                      Card link
-                    </a>
-                  </div>
-                </div>
-              </div>
+              <OrderBook orderBook={openOrders} />
               <div className="vertical-split">
                 <div className="card bg-dark text-white">
                   <div className="card-header">Card Title</div>
@@ -146,11 +162,7 @@ export class BodyContent extends Component {
                   </div>
                 </div>
               </div>
-              {allStreamsLoaded ? (
-                <Trades trades={this.state.tradeStream} />
-              ) : (
-                ""
-              )}
+              <Trades trades={tradeStream} />
             </div>
           </div>
         )}
