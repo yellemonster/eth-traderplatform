@@ -53,6 +53,18 @@ export class EthContextProvider extends Component {
     }
   }
 
+  async GET_AccountData() {
+    this.setState({ isLoading: true });
+
+    const accounts = await window.web3.eth.getAccounts();
+    this.setState({ userAddress: accounts[0], isLoading: false });
+  }
+
+  async GET_etherBalance(account) {
+    const etherBalance = await window.web3.eth.getBalance(account);
+    return etherBalance;
+  }
+
   async LOAD_web3() {
     this.setState({ isLoading: true });
 
@@ -72,13 +84,6 @@ export class EthContextProvider extends Component {
     }
 
     this.setState({ isLoading: false });
-  }
-
-  async GET_AccountData() {
-    this.setState({ isLoading: true });
-
-    const accounts = await window.web3.eth.getAccounts();
-    this.setState({ userAddress: accounts[0], isLoading: false });
   }
 
   async LOAD_Contract(contract) {
@@ -104,7 +109,11 @@ export class EthContextProvider extends Component {
   render() {
     return (
       <EthContext.Provider
-        value={{ ...this.state, loadContract: this.LOAD_Contract }}
+        value={{
+          ...this.state,
+          loadContract: this.LOAD_Contract,
+          getEthBalance: this.GET_etherBalance,
+        }}
       >
         {this.props.children}
       </EthContext.Provider>

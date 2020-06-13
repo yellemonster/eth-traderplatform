@@ -19,13 +19,9 @@ const tokenPriceClass = (thisPrice, lastOrderIndex, lastPrice) => {
     return "success";
   }
 
-  if (lastPrice < thisPrice) {
+  if (lastPrice <= thisPrice) {
     className = "success";
-  } else if (lastPrice > thisPrice) {
-    className = "danger";
-  } else {
-    className = "warning";
-  }
+  } else className = "danger";
 
   return className;
 };

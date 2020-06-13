@@ -1,7 +1,7 @@
 import React from "react";
 import Chart from "react-apexcharts";
-import { chartOptions, dummyData } from "./PriceChart.config";
-import { decorateOrder, buildGraphData, getChartData } from "../helpers";
+import { chartOptions } from "./PriceChart.config";
+import { decorateOrder, getChartData } from "../helpers";
 
 export default function PriceChart(props) {
   const chartData = () => {

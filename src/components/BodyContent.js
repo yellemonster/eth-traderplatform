@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { EthContext } from "../_contexts/EthContext";
 import { reject } from "lodash";
+import web3 from "web3";
 
 // CONTRACTS
 import Exchange from "../abis/Exchange.json";
@@ -14,6 +15,8 @@ import Trades from "./Trades";
 import OrderBook from "./OrderBook";
 import MyTransactions from "./MyTransactions";
 import PriceChart from "./PriceChart";
+import { ETHER_ADDRESS, tokens } from "../helpers";
+import Balance from "./Balance";
 
 export class BodyContent extends Component {
   static contextType = EthContext;
@@ -24,7 +27,6 @@ export class BodyContent extends Component {
     this.state = {
       loading: true,
       account: "",
-      orderBookLoadComplete: false,
     };
   }
 
@@ -34,13 +36,16 @@ export class BodyContent extends Component {
 
   INITIALIZE = async () => {
     this.setState({ loading: true });
-    await this.LOAD_ContractData();
+
+    await this.LOAD_contracts();
+    await this.LOAD_orders();
+    await this.LOAD_balances();
     await this.SubscribeToEvents();
-    await this.LOAD_allOrders();
+
     this.setState({ loading: false });
   };
 
-  LOAD_ContractData = async () => {
+  LOAD_contracts = async () => {
     const exchangeContract = await this.context.loadContract(Exchange);
     const tokenContract = await this.context.loadContract(Token);
 
@@ -63,7 +68,7 @@ export class BodyContent extends Component {
     return eventStream.map((event) => event.returnValues);
   };
 
-  LOAD_allOrders = async () => {
+  LOAD_orders = async () => {
     const cancelledOrders = await this.GET_eventSet("Cancel");
     const tradeStream = await this.GET_eventSet("Trade");
     const orderStream = await this.GET_eventSet("Order");
@@ -84,7 +89,6 @@ export class BodyContent extends Component {
     });
   };
 
-  // ORDER BOOK FUNCTIONS
   LOAD_openOrders = (all, filled, cancelled) => {
     const _openOrders = reject(all, (order) => {
       const orderFilled = filled.some((o) => o.id === order.id);
@@ -93,6 +97,35 @@ export class BodyContent extends Component {
     });
 
     return _openOrders;
+  };
+
+  LOAD_balances = async () => {
+    // console.log("loading wallet balances...");
+    const { exchangeContract, tokenContract, account } = this.state;
+
+    // Ether balance in wallet
+    const walletEtherBalance = await this.context.getEthBalance(account);
+
+    const walletTokenBalance = await tokenContract.methods
+      .balanceOf(account)
+      .call();
+
+    const exchangeEtherBalance = await exchangeContract.methods
+      .balanceOf(ETHER_ADDRESS, account)
+      .call();
+
+    const exchangeTokenBalance = await exchangeContract.methods
+      .balanceOf(tokenContract.options.address, account)
+      .call();
+
+    this.setState({
+      balances: {
+        walletEtherBalance,
+        walletTokenBalance,
+        exchangeEtherBalance,
+        exchangeTokenBalance,
+      },
+    });
   };
 
   // EVENT SUBSCRIPTIONS
@@ -111,6 +144,20 @@ export class BodyContent extends Component {
         console.log("Trade event result: ", event.returnValues);
       }
     });
+    this.state.exchangeContract.events.Deposit({}, (error, event) => {
+      if (error) {
+        console.log("Deposit event error: ", error);
+      } else if (event) {
+        console.log("Deposit event result: ", event.returnValues);
+      }
+    });
+    this.state.exchangeContract.events.Withdraw({}, (error, event) => {
+      if (error) {
+        console.log("Withdraw event error: ", error);
+      } else if (event) {
+        console.log("Withdraw event result: ", event.returnValues);
+      }
+    });
   };
 
   // USER ACTIONS
@@ -121,7 +168,7 @@ export class BodyContent extends Component {
         .cancelOrder(order.id)
         .send({ from: account })
         .on("transactionHash", async (hash) => {
-          await this.LOAD_allOrders();
+          await this.LOAD_orders();
         })
         .on("error", (error) => {
           console.log(error);
@@ -140,13 +187,85 @@ export class BodyContent extends Component {
         .fillOrder(order.id)
         .send({ from: account })
         .on("transactionHash", async (hash) => {
-          await this.LOAD_allOrders();
+          await this.LOAD_orders();
         })
         .on("error", (error) => {
           console.log(error);
           window.alert("ERROR filling order");
         });
     }
+  };
+
+  // BALANCE ACTIONS
+  depositEther = (amount) => {
+    this.state.exchangeContract.methods
+      .depositEther()
+      .send({
+        from: this.state.account,
+        value: web3.utils.toWei(amount, "Ether"),
+      })
+      .on("transactionHand", (hash) => {
+        this.INITIALIZE();
+      })
+      .on("error", (error) => {
+        console.log(error);
+        window.alert("There was an error depositing ETH");
+      });
+  };
+
+  withdrawEther = (amount) => {
+    this.state.exchangeContract.methods
+      .withdrawEther(web3.utils.toWei(amount, "Ether"))
+      .send({
+        from: this.state.account,
+      })
+      .on("transactionHand", (hash) => {
+        this.INITIALIZE();
+      })
+      .on("error", (error) => {
+        console.log(error);
+        window.alert("There was an error depositing ETH");
+      });
+  };
+
+  depositToken = (amount) => {
+    const exchange = this.state.exchangeContract;
+    const token = this.state.tokenContract;
+    const account = this.state.account;
+    amount = web3.utils.toWei(amount, "ether");
+    token.methods
+      .approve(exchange.options.address, amount)
+      .send({ from: account })
+      .on("transactionHash", (hash) => {
+        console.log(`${tokens(amount)} tokens approved for deposit`);
+        exchange.methods
+          .depositToken(token.options.address, amount)
+          .send({ from: account })
+          .on("transactionHash", (hash) => {
+            console.log(`Desposit of ${tokens(amount)} complete!`);
+          });
+      })
+      .on("error", (error) => {
+        console.log(error);
+        window.alert("There was an error depositing ETH");
+      });
+  };
+
+  withdrawToken = (amount) => {
+    const exchange = this.state.exchangeContract;
+    const token = this.state.tokenContract;
+    const account = this.state.account;
+
+    exchange.methods
+      .withdrawToken(token.options.address, web3.utils.toWei(amount, "ether"))
+      .send({ from: account })
+      .on("transactionHash", (hash) => {
+        console.log("withdrawal successful");
+      })
+      .on("error", (error) => {
+        console.log(error);
+        window.alert("There was an error depositing ETH");
+      });
   };
 
   render() {
@@ -166,18 +285,13 @@ export class BodyContent extends Component {
           <div>
             <div className="content">
               <div className="vertical-split">
-                <div className="card bg-dark text-white">
-                  <div className="card-header">Card Title</div>
-                  <div className="card-body">
-                    <p className="card-text">
-                      Some quick example text to build on the card title and
-                      make up the bulk of the card's content.
-                    </p>
-                    <a href="/#" className="card-link">
-                      Card link
-                    </a>
-                  </div>
-                </div>
+                <Balance
+                  balances={this.state.balances}
+                  depositEther={this.depositEther}
+                  withdrawEther={this.withdrawEther}
+                  depositToken={this.depositToken}
+                  withdrawToken={this.withdrawToken}
+                />
                 <div className="card bg-dark text-white">
                   <div className="card-header">Card Title</div>
                   <div className="card-body">
