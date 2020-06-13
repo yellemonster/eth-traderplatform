@@ -146,7 +146,12 @@
 }
 
 td.cancel-order {
+  color: rgb(150, 150, 150);
   cursor: pointer;
+}
+
+td.cancel-order:hover {
+  color: deeppink;
 }
 
 tr.order-book-order {

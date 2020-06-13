@@ -3,6 +3,7 @@ export const chartOptions = {
     animations: { enabled: false },
     toolbar: { show: false },
     width: "100px",
+    offsetY: 50,
   },
   tooltip: {
     enabled: true,
@@ -38,20 +39,21 @@ export const chartOptions = {
     labels: {
       show: true,
       style: {
-        colors: "#fff",
-        fontSize: "8px",
+        colors: "#ddd",
+        fontSize: "14px",
         cssClass: "apexcharts-xaxis-label",
       },
     },
   },
   yaxis: {
+    type: "numeric",
     labels: {
       show: true,
       minWidth: 0,
-      maxWidth: 160,
+      maxWidth: 100,
       style: {
-        color: "#fff",
-        fontSize: "8px",
+        colors: "#ddd",
+        fontSize: "14px",
         cssClass: "apexcharts-yaxis-label",
       },
       offsetX: 0,

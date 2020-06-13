@@ -115,6 +115,14 @@ export const decorateMyOpenOrders = (orders, account) => {
   });
 };
 
+export const decorateMyCancelledOrders = (orders, account) => {
+  return orders.map((order) => {
+    order = decorateOrder(order);
+    order = decorateMyCanelledOrder_single(order, account);
+    return order;
+  });
+};
+
 const decorateMyFilledOrder_single = (order, account) => {
   const myOrder = order.user === account;
   let orderType;
@@ -133,6 +141,16 @@ const decorateMyFilledOrder_single = (order, account) => {
 };
 
 const decorateMyOpenOrder_single = (order, account) => {
+  let orderType = order.tokenGive === ETHER_ADDRESS ? "buy" : "sell";
+
+  return {
+    ...order,
+    orderType,
+    orderTypeClass: orderType === "buy" ? "success" : "danger",
+  };
+};
+
+const decorateMyCanelledOrder_single = (order, account) => {
   let orderType = order.tokenGive === ETHER_ADDRESS ? "buy" : "sell";
 
   return {

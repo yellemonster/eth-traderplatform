@@ -2,6 +2,7 @@ import React from "react";
 import { groupBy, get } from "lodash";
 
 import { ETHER_ADDRESS, decorateOrder } from "../helpers";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 // import Spinner from "./Spinner";
 
@@ -42,13 +43,13 @@ export default function OrderBook(props) {
   const decorateOrderBook = (order) => {
     const orderType = order.tokenGive === ETHER_ADDRESS ? "buy" : "sell";
     const orderTypeClass = orderType === "buy" ? "success" : "danger";
-    const orderFillClass = orderType === "buy" ? "sell" : "buy";
+    const orderFillAction = orderType === "buy" ? "sell" : "buy";
 
     return {
       ...order,
       orderType,
       orderTypeClass,
-      orderFillClass,
+      orderFillAction,
     };
   };
 
@@ -69,11 +70,25 @@ export default function OrderBook(props) {
   const renderOrder = (order) => {
     order = decorateOrder(order);
     return (
-      <tr key={order.id}>
-        <td>{order.tokenAmount}</td>
-        <td className={`text-${order.orderTypeClass}`}>{order.tokenPrice}</td>
-        <td>{order.etherAmount}</td>
-      </tr>
+      <OverlayTrigger
+        key={order.id}
+        placement="auto"
+        overlay={
+          <Tooltip id={order.id}>
+            {`Click here to ${order.orderFillAction}`}
+          </Tooltip>
+        }
+      >
+        <tr
+          key={order.id}
+          className="order-book-order"
+          onClick={(e) => props.fillOrder(order)}
+        >
+          <td>{order.tokenAmount}</td>
+          <td className={`text-${order.orderTypeClass}`}>{order.tokenPrice}</td>
+          <td>{order.etherAmount}</td>
+        </tr>
+      </OverlayTrigger>
     );
   };
 

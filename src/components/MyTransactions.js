@@ -1,10 +1,20 @@
 import React from "react";
 import { Tabs, Tab } from "react-bootstrap";
-import { decorateMyFilledOrders, decorateMyOpenOrders } from "../helpers";
+import {
+  decorateMyFilledOrders,
+  decorateMyOpenOrders,
+  decorateMyCancelledOrders,
+} from "../helpers";
 // import Spinner from "./Spinner";
 
 export default function MyTransactions(props) {
-  const { ordersFilled, ordersOpen, myAccount } = props;
+  const {
+    ordersFilled,
+    ordersOpen,
+    ordersCancelled,
+    myAccount,
+    cancelOrder,
+  } = props;
 
   const showMyFilledOrders = () => {
     let orders = ordersFilled.filter(
@@ -49,9 +59,27 @@ export default function MyTransactions(props) {
               <td className={`text-${order.orderTypeClass}`}>
                 {order.tokenPrice}
               </td>
-              <td className="text-muted">
+              <td className="cancel-order" onClick={(e) => cancelOrder(order)}>
                 <strong>X</strong>
               </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    );
+  };
+
+  const showMyCancelledOrders = () => {
+    let orders = ordersCancelled.filter((o) => o.user === myAccount);
+    orders = orders.sort((a, b) => a.timestamp - b.timestamp);
+    orders = decorateMyCancelledOrders(orders, myAccount);
+    return (
+      <tbody>
+        {orders.map((order) => {
+          return (
+            <tr key={order.id}>
+              <td className="text-warning">{order.tokenAmount}</td>
+              <td className="text-warning">{order.tokenPrice}</td>
             </tr>
           );
         })}
@@ -86,6 +114,17 @@ export default function MyTransactions(props) {
                 </tr>
               </thead>
               {showMyOpenOrders()}
+            </table>
+          </Tab>
+          <Tab eventKey="cancelled" title="Cancelled">
+            <table className="table table-dark table-sm small">
+              <thead>
+                <tr>
+                  <th>Amount</th>
+                  <th>DAPP/ETH</th>
+                </tr>
+              </thead>
+              {showMyCancelledOrders()}
             </table>
           </Tab>
         </Tabs>

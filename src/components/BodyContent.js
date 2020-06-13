@@ -35,6 +35,7 @@ export class BodyContent extends Component {
   INITIALIZE = async () => {
     this.setState({ loading: true });
     await this.LOAD_ContractData();
+    await this.SubscribeToEvents();
     await this.LOAD_allOrders();
     this.setState({ loading: false });
   };
@@ -94,8 +95,68 @@ export class BodyContent extends Component {
     return _openOrders;
   };
 
+  // EVENT SUBSCRIPTIONS
+  SubscribeToEvents = async () => {
+    this.state.exchangeContract.events.Cancel({}, (error, event) => {
+      if (error) {
+        console.log("Cancel event error: ", error);
+      } else if (event) {
+        console.log("Cancel event result: ", event.returnValues);
+      }
+    });
+    this.state.exchangeContract.events.Trade({}, (error, event) => {
+      if (error) {
+        console.log("Trade event error: ", error);
+      } else if (event) {
+        console.log("Trade event result: ", event.returnValues);
+      }
+    });
+  };
+
+  // USER ACTIONS
+  cancelOrder = (order) => {
+    const { exchangeContract, account } = this.state;
+    if (exchangeContract && account) {
+      exchangeContract.methods
+        .cancelOrder(order.id)
+        .send({ from: account })
+        .on("transactionHash", async (hash) => {
+          await this.LOAD_allOrders();
+        })
+        .on("error", (error) => {
+          console.log(error);
+          window.alert("ERROR cancelling order");
+        });
+    }
+  };
+
+  fillOrder = (order) => {
+    const { exchangeContract, account } = this.state;
+    console.log("Order user: ", order.user);
+    console.log("This User: ", account);
+    // return;
+    if (exchangeContract && account) {
+      exchangeContract.methods
+        .fillOrder(order.id)
+        .send({ from: account })
+        .on("transactionHash", async (hash) => {
+          await this.LOAD_allOrders();
+        })
+        .on("error", (error) => {
+          console.log(error);
+          window.alert("ERROR filling order");
+        });
+    }
+  };
+
   render() {
-    const { account, loading, openOrders, tradeStream } = this.state;
+    const {
+      account,
+      loading,
+      openOrders,
+      tradeStream,
+      cancelledOrders,
+    } = this.state;
 
     return (
       <div className="container">
@@ -130,13 +191,15 @@ export class BodyContent extends Component {
                   </div>
                 </div>
               </div>
-              <OrderBook orderBook={openOrders} />
+              <OrderBook orderBook={openOrders} fillOrder={this.fillOrder} />
               <div className="vertical-split">
                 <PriceChart filledOrders={tradeStream} />
                 <MyTransactions
                   myAccount={account}
                   ordersFilled={tradeStream}
                   ordersOpen={openOrders}
+                  ordersCancelled={cancelledOrders}
+                  cancelOrder={this.cancelOrder}
                 />
               </div>
               <Trades trades={tradeStream} />

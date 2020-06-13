@@ -71,7 +71,7 @@ contract Exchange {
 
     // Fallback: reverts if Ether is sent to this smart contract by mistake
     function() external {
-        revert();
+        revert("Unauthorized Ether deposit reverted via Fallback function");
     }
 
     function depositEther() public payable {
@@ -80,24 +80,33 @@ contract Exchange {
     }
 
     function withdrawEther(uint256 _amount) public {
-        require(tokens[ETHER][msg.sender] >= _amount);
+        require(tokens[ETHER][msg.sender] >= _amount, "Amount exceeds balance");
         tokens[ETHER][msg.sender] = tokens[ETHER][msg.sender].sub(_amount);
         msg.sender.transfer(_amount);
         emit Withdraw(ETHER, msg.sender, _amount, tokens[ETHER][msg.sender]);
     }
 
     function depositToken(address _token, uint256 _amount) public {
-        require(_token != ETHER);
-        require(Token(_token).transferFrom(msg.sender, address(this), _amount));
+        require(_token != ETHER, "Invalid token address");
+        require(
+            Token(_token).transferFrom(msg.sender, address(this), _amount),
+            "Token deposit failed"
+        );
         tokens[_token][msg.sender] = tokens[_token][msg.sender].add(_amount);
         emit Deposit(_token, msg.sender, _amount, tokens[_token][msg.sender]);
     }
 
     function withdrawToken(address _token, uint256 _amount) public {
-        require(_token != ETHER);
-        require(tokens[_token][msg.sender] >= _amount);
+        require(_token != ETHER, "Invalid token address");
+        require(
+            tokens[_token][msg.sender] >= _amount,
+            "Amount exceeds balance"
+        );
         tokens[_token][msg.sender] = tokens[_token][msg.sender].sub(_amount);
-        require(Token(_token).transfer(msg.sender, _amount));
+        require(
+            Token(_token).transfer(msg.sender, _amount),
+            "Withdrawal failed"
+        );
         emit Withdraw(_token, msg.sender, _amount, tokens[_token][msg.sender]);
     }
 
@@ -138,8 +147,8 @@ contract Exchange {
 
     function cancelOrder(uint256 _id) public {
         _Order storage _order = orders[_id];
-        require(address(_order.user) == msg.sender);
-        require(_order.id == _id); // The order must exist
+        require(address(_order.user) == msg.sender, "This user may not cancel");
+        require(_order.id == _id, "Order not found"); // The order must exist
         orderCancelled[_id] = true;
         emit Cancel(
             _order.id,
@@ -153,9 +162,9 @@ contract Exchange {
     }
 
     function fillOrder(uint256 _id) public {
-        require(_id > 0 && _id <= orderCount);
-        require(!orderFilled[_id]);
-        require(!orderCancelled[_id]);
+        require(_id > 0 && _id <= orderCount, "Invalid order ID");
+        require(!orderFilled[_id], "Order already filled");
+        require(!orderCancelled[_id], "Order already cancelled");
         _Order storage _order = orders[_id];
         _trade(
             _order.id,
