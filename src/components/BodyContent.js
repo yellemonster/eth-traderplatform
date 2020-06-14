@@ -17,6 +17,7 @@ import MyTransactions from "./MyTransactions";
 import PriceChart from "./PriceChart";
 import { ETHER_ADDRESS, tokens } from "../helpers";
 import Balance from "./Balance";
+import NewOrder from "./NewOrder";
 
 export class BodyContent extends Component {
   static contextType = EthContext;
@@ -158,6 +159,13 @@ export class BodyContent extends Component {
         console.log("Withdraw event result: ", event.returnValues);
       }
     });
+    this.state.exchangeContract.events.Order({}, (error, event) => {
+      if (error) {
+        console.log("MakeOrder event error: ", error);
+      } else if (event) {
+        console.log("MakeOrder event result: ", event.returnValues);
+      }
+    });
   };
 
   // USER ACTIONS
@@ -268,6 +276,51 @@ export class BodyContent extends Component {
       });
   };
 
+  // CREATE ORDER ACTIONS
+  makeBuyOrder = (amount, price) => {
+    const tokenGet = this.state.tokenContract.options.address;
+    const amountGet = web3.utils.toWei(amount, "ether");
+    const tokenGive = ETHER_ADDRESS;
+    const amountGive = web3.utils.toWei((amount * price).toString(), "ether");
+
+    // console.log(
+    //   `Buy order submitted for ${amount} PVB tokens at price of ${price}`
+    // );
+    // return;
+    this.state.exchangeContract.methods
+      .makeOrder(tokenGet, amountGet, tokenGive, amountGive)
+      .send({ from: this.state.account })
+      .on("transactionHash", (hash) => {
+        console.log("Buy order successfully submitted");
+      })
+      .on("error", (error) => {
+        console.log("Error submitting buy order: ", error);
+        window.alert("Error submitting buy order");
+      });
+  };
+  makeSellOrder = (amount, price) => {
+    const tokenGet = ETHER_ADDRESS;
+    const amountGet = web3.utils.toWei((amount * price).toString(), "ether");
+    const tokenGive = this.state.tokenContract.options.address;
+    const amountGive = web3.utils.toWei(amount, "ether");
+
+    // console.log(
+    //   `Sell order submitted for ${amount} PVB tokens at price of ${price}`
+    // );
+    // return;
+
+    this.state.exchangeContract.methods
+      .makeOrder(tokenGet, amountGet, tokenGive, amountGive)
+      .send({ from: this.state.account })
+      .on("transactionHash", (hash) => {
+        console.log("Sell order successfully submitted");
+      })
+      .on("error", (error) => {
+        console.log("Error submitting sell order: ", error);
+        window.alert("Error submitting sell order");
+      });
+  };
+
   render() {
     const {
       account,
@@ -292,18 +345,10 @@ export class BodyContent extends Component {
                   depositToken={this.depositToken}
                   withdrawToken={this.withdrawToken}
                 />
-                <div className="card bg-dark text-white">
-                  <div className="card-header">Card Title</div>
-                  <div className="card-body">
-                    <p className="card-text">
-                      Some quick example text to build on the card title and
-                      make up the bulk of the card's content.
-                    </p>
-                    <a href="/#" className="card-link">
-                      Card link
-                    </a>
-                  </div>
-                </div>
+                <NewOrder
+                  makeBuyOrder={this.makeBuyOrder}
+                  makeSellOrder={this.makeSellOrder}
+                />
               </div>
               <OrderBook orderBook={openOrders} fillOrder={this.fillOrder} />
               <div className="vertical-split">

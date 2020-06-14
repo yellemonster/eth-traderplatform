@@ -1,5 +1,5 @@
 import { Tabs, Tab } from "react-bootstrap";
-import { tokens, ether } from "../helpers";
+import { formatBalance } from "../helpers";
 // import Spinner from './Spinner'
 
 import React, { Component } from "react";
@@ -59,8 +59,8 @@ export class Balance extends Component {
             <tbody>
               <tr>
                 <td>ETH</td>
-                <td>{ether(walletEtherBalance)}</td>
-                <td>{ether(exchangeEtherBalance)}</td>
+                <td>{formatBalance(walletEtherBalance)}</td>
+                <td>{formatBalance(exchangeEtherBalance)}</td>
               </tr>
             </tbody>
           </table>
@@ -96,8 +96,8 @@ export class Balance extends Component {
             <tbody>
               <tr>
                 <td>PVB</td>
-                <td>{tokens(walletTokenBalance)}</td>
-                <td>{tokens(exchangeTokenBalance)}</td>
+                <td>{formatBalance(walletTokenBalance)}</td>
+                <td>{formatBalance(exchangeTokenBalance)}</td>
               </tr>
             </tbody>
           </table>
@@ -129,8 +129,6 @@ export class Balance extends Component {
             </div>
           </form>
         </Tab>
-
-        {/* WITHDRAWALS TAB ========================================================= */}
         <Tab eventKey="withdraw" title="Withdraw" className="bg-dark">
           <table className="table table-dark table-sm small">
             <thead>
@@ -143,8 +141,8 @@ export class Balance extends Component {
             <tbody>
               <tr>
                 <td>ETH</td>
-                <td>{ether(walletEtherBalance)}</td>
-                <td>{ether(exchangeEtherBalance)}</td>
+                <td>{formatBalance(walletEtherBalance)}</td>
+                <td>{formatBalance(exchangeEtherBalance)}</td>
               </tr>
             </tbody>
           </table>
@@ -179,8 +177,8 @@ export class Balance extends Component {
             <tbody>
               <tr>
                 <td>PVB</td>
-                <td>{tokens(walletTokenBalance)}</td>
-                <td>{tokens(exchangeTokenBalance)}</td>
+                <td>{formatBalance(walletTokenBalance)}</td>
+                <td>{formatBalance(exchangeTokenBalance)}</td>
               </tr>
             </tbody>
           </table>
